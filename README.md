@@ -22,7 +22,7 @@
 ## 📂 ERD Diagram
 > **데이터베이스 설계 (상품, 옵션, 장바구니 간의 관계)**
 
-![ERD Diagram](이미지주소)
+![ERD Diagram](<img width="1216" height="660" alt="Image" src="https://github.com/user-attachments/assets/c27dd680-2174-46ad-b682-3ee43949ef6c" />)
 
 <br>
 
