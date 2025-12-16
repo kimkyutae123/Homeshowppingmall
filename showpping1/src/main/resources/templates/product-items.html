@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="productGrid" class="product-grid">
+	    
+	    <div class="product-item" th:each="product : ${products.content}"> 
+	        
+	        <a th:href="@{/product/{productId}(productId=${product.id})}" class="product-img-link">
+	            <div class="product-img" th:style="'background-image: url(' + ${product.imageUrl} + ');'">
+	            </div>
+	        </a>
+	        
+	        <a th:href="@{/product/{productId}(productId=${product.id})}" class="product-name-link">
+	            <p class="product-name" th:text="${product.name}"></p>
+	        </a>
+	        
+	        <p class="product-price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '원'"></p>
+	        
+	    </div> 
+	    </div>
+</body>
+</html>

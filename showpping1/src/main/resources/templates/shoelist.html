@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신발 목록 | 유한 옷 마켓</title>
+    
+    <link rel="stylesheet" th:href="@{/style/style.css}"> 
+    <script defer th:src="@{/js/infinity-scroll.js}"></script>
+    
+</head>
+<body>
+		<header class="header">
+			    <div class="nav-bar">
+			        <div class="logo">
+			           <h1 style="margin: 0;">유한 옷 마켓</h1>
+			        </div>
+			        
+			        <div class="search-and-user">
+			            <a th:href="@{/}" class="menu-link">홈</a>
+			            <a th:href="@{/shirtlist}" class="menu-link">상의 목록</a>
+			            <a th:href="@{/cart}" class="menu-link">장바구니</a>
+			           
+			            
+			            <div class="user-status-group">
+			                <span th:if="${session.user != null}" class="user-welcome">
+			                    <span th:text="${session.user.username}"></span>님, 어서오세요
+			                </span>
+			                
+			                <a th:unless="${session.user != null}" th:href="@{/register}" class="btn btn-outline-primary btn-sm">
+			                    <i class="bi bi-person-plus"></i> 회원가입
+			                </a>
+			                <a th:unless="${session.user != null}" th:href="@{/login}" class="btn btn-primary btn-sm">
+			                    <i class="bi bi-box-arrow-in-right"></i> 로그인
+			                </a>
+			                
+			                <a th:if="${session.user != null}" th:href="@{/logout}" class="menu-link menu-link-button">
+			                    <i class="bi bi-box-arrow-right"></i> 로그아웃
+			                </a>
+			            </div>
+			        </div>
+			    </div>
+			</header>
+        
+	
+	<main class="page-content-wrapper">
+
+        <aside class="sidebar">
+            <h2 class="sidebar-title">👟 신발 카테고리</h2>
+            <ul class="category-list">
+                <li><a th:href="@{/shoelist}">전체 신발 목록</a></li> 
+                
+                <li><a th:href="@{/shoelist(category='스니커즈')}">스니커즈</a></li>
+                <li><a th:href="@{/shoelist(category='패딩/퍼신발')}">패딩/퍼신발</a></li>
+                <li><a th:href="@{/shoelist(category='부츠/워커')}">부츠/워커</a></li>
+                <li><a th:href="@{/shoelist(category='구두')}">구두</a></li>
+                <li><a th:href="@{/shoelist(category='샌들/슬리퍼')}">샌들/슬리퍼</a></li>
+                <li><a th:href="@{/shoelist(category='스포츠화')}">스포츠화</a></li>
+            </ul>
+        </aside>
+
+        <section class="main-content">
+            <h1 class="section-title" style="border-left: none; padding-left: 0;">신발 전체 목록</h1>
+            
+            <div class="list-header">
+                <span class="product-count">총 <span th:text="${products != null} ? ${products.totalElements} : 0">123</span>개 상품</span>
+                <div class="sort-options">
+                    <a th:href="@{/shoelist(sort='new')}" class="active">신상품순</a>
+                    <a th:href="@{/shoelist(sort='best')}">판매순</a>
+                    <a th:href="@{/shoelist(sort='lowprice')}">낮은 가격순</a>
+                </div>
+            </div>
+            
+            <div id="product-list-container">
+                <div th:replace="~{product-items :: productGrid}"></div>
+            </div>
+			<div class="pagination-area" style="text-align: center; margin-top: 30px;">
+			    <nav aria-label="Page navigation">
+			        <ul class="pagination-list">
+			            
+			            <li th:class="${products.number <= 0} ? 'disabled'">
+			                <a th:href="@{/shirtlist(page=${products.number - 1}, category=${param.category})}" aria-label="Previous">
+			                    <span>&laquo;</span>
+			                </a>
+			            </li>
+
+			            <li th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}"
+			                th:class="${products.number == i} ? 'active'">
+			                <a th:href="@{/shoelist(page=${i}, category=${param.category})}" th:text="${i + 1}">1</a>
+			            </li>
+
+			            <li th:class="${products.number + 1 >= products.totalPages} ? 'disabled'">
+			                <a th:href="@{/shoelist(page=${products.number + 1}, category=${param.category})}" aria-label="Next">
+			                    <span>&raquo;</span>
+			                </a>
+			            </li>
+			        </ul>
+			    </nav>
+			</div>
+        </section>
+
+    </main>
+    <footer class="footer">
+        <div class="footer-info">
+            <p>Copyright &copy; 유한 옷 마켓. All rights reserved.</p>
+            <p>고객센터 | 이용약관 | 개인정보처리방침</p>
+        </div>
+    </footer>
+
+</body>
+</html>

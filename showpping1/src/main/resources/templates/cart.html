@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장바구니 | 유한 옷 마켓</title>
+    <link rel="stylesheet" th:href="@{/style/style.css}"> 
+    </head>
+<body>
+
+	<header class="header">
+		    <div class="nav-bar">
+		        <div class="logo">
+		           <h1 style="margin: 0;">유한 옷 마켓</h1>
+		        </div>
+		        
+		        <div class="search-and-user">
+		            <a th:href="@{/}" class="menu-link">홈</a>
+		            <a th:href="@{/shirtlist}" class="menu-link">상의 목록</a>
+					<a th:href="@{/cart}" class="menu-link">장바구니</a>
+		           
+		            
+		            <div class="user-status-group">
+		                <span th:if="${session.user != null}" class="user-welcome">
+		                    <span th:text="${session.user.username}"></span>님, 어서오세요
+		                </span>
+		                
+		                <a th:unless="${session.user != null}" th:href="@{/register}" class="btn btn-outline-primary btn-sm">
+		                    <i class="bi bi-person-plus"></i> 회원가입
+		                </a>
+		                <a th:unless="${session.user != null}" th:href="@{/login}" class="btn btn-primary btn-sm">
+		                    <i class="bi bi-box-arrow-in-right"></i> 로그인
+		                </a>
+		                
+		                <a th:if="${session.user != null}" th:href="@{/logout}" class="menu-link menu-link-button">
+		                    <i class="bi bi-box-arrow-right"></i> 로그아웃
+		                </a>
+		            </div>
+		        </div>
+		    </div>
+	</header>
+
+    <main class="cart-container">
+        <h1 class="page-title">내 장바구니</h1>
+        
+        <form id="cartForm">
+            <div th:if="${cartItems != null and not #lists.isEmpty(cartItems)}">
+                
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>상품 정보</th>
+                            <th>옵션</th>
+                            <th>단가</th>
+                            <th>수량</th>
+                            <th>합계</th>
+                            <th>선택</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item, stat : ${cartItems}">
+                            
+                            <td class="product-cell">
+                                <input type="hidden" name="cartItemId" th:value="${item.id}">
+                                <div class="product-info-group">
+                                    <a th:href="@{/product/{productId}(productId=${item.productOption.product.id})}">
+                                        <img th:src="${item.productOption.product.imageUrl}" alt="상품 이미지" class="cart-thumb">
+                                        <span th:text="${item.productOption.product.name}">[상품명] 프리미엄 울 니트</span>
+                                    </a>
+                                </div>
+                            </td>
+                            
+                            <td th:text="${item.productOption.sizeName}">M</td>
+                            
+							<td th:with="price=${item.productOption.product.price}" class="price-cell">
+							    <span th:text="${#numbers.formatDecimal(price, 0, 'COMMA', 0, 'POINT')}"
+							          th:data-price="${price}"  th:id="'price-' + ${item.id}">79,000</span>원
+							</td>
+                            
+                            <td class="quantity-cell">
+                                <div class="quantity-control">
+									<input type="number" 
+									       th:id="'quantity-' + ${item.id}"
+									       th:value="${item.quantity}" 
+									       min="1" 
+									       th:max="${item.productOption.stockQuantity}"
+									       class="quantity-input"
+									       
+									       th:data-cart-item-id="${item.id}" 
+									       
+									       onchange="updateItemQuantity(this)">
+                                </div>
+                            </td>
+                            
+                            <td class="total-price-cell">
+                                <span th:with="total=${item.quantity * item.productOption.product.price}"
+                                      th:id="'total-' + ${item.id}"
+                                      th:text="${#numbers.formatDecimal(total, 0, 'COMMA', 0, 'POINT')}">158,000</span>원
+                            </td>
+                            
+                            <td class="action-cell">
+                                <button type="button" 
+                                        class="btn-delete" 
+                                        th:onclick="|deleteCartItem(${item.id})|">
+                                    <i class="bi bi-x-circle"></i> 삭제
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                </table>
+				<div class="cart-summary">
+				    <h2>결제 예상 금액</h2>
+				    
+				    <div class="summary-row">
+				        <span>총 상품 금액</span>
+				        <span id="subtotal" 
+				              th:text="${#numbers.formatDecimal(T(com.showpping1.spring.util.CartUtils).calculateSubtotal(cartItems), 0, 'COMMA', 0, 'POINT')}">240,300</span>원
+				    </div>
+				    
+				    <div class="summary-row">
+				        <span>배송비</span>
+				        <span id="shippingFeeSpan" 
+				              th:text="${T(com.showpping1.spring.util.CartUtils).getShippingFee(cartItems)} == 0 ? '무료' : ${#numbers.formatDecimal(T(com.showpping1.spring.util.CartUtils).getShippingFee(cartItems), 0, 'COMMA', 0, 'POINT')} + '원'">무료</span>
+				    </div>
+				    <hr>
+				    
+				    <div class="summary-row final-total-row"> 
+				        <span>총 주문 금액</span> 
+				        <span id="finalTotal" 
+				              th:text="${#numbers.formatDecimal(T(com.showpping1.spring.util.CartUtils).calculateFinalTotal(cartItems), 0, 'COMMA', 0, 'POINT') + '원'}">240,300원</span>
+				    </div>
+				    
+				</div> 
+				<div class="checkout-buttons-container">
+				    <a th:href="@{/order/checkout}" class="btn-checkout" onclick="proceedToOrder()">
+				        주문하기
+				    </a>
+				    <a th:href="@{/}" class="btn-continue">쇼핑 계속하기</a>
+				</div>
+
+
+						  </div>
+					  </div>
+				    
+				    </div>
+            
+            <div th:unless="${cartItems != null and not #lists.isEmpty(cartItems)}" class="empty-cart">
+                <p>장바구니에 담긴 상품이 없습니다. 😭</p>
+                <a th:href="@{/}" class="btn-continue">상품 구경하러 가기</a>
+            </div>
+            
+        </form>
+        
+    </main>
+
+    <footer class="footer">...</footer>
+
+	<script>
+	    // ⭐️ cart.html의 기존 <script> 내용을 아래로 덮어쓰세요. ⭐️
+
+	    document.addEventListener('DOMContentLoaded', function() {
+	        const cartSummary = document.querySelector('.cart-summary');
+	        const finalTotalSpan = document.getElementById('finalTotal');
+	        const subtotalSpan = document.getElementById('subtotal');
+
+	        // 헬퍼 함수: 금액 포맷
+	        function formatPrice(amount) {
+	            return amount.toLocaleString('ko-KR');
+	        }
+
+	        // ----------------------------------------------------
+	        // 💰 1. 클라이언트 측에서 장바구니 요약 금액을 계산하고 업데이트합니다.
+	        // ----------------------------------------------------
+	        function updateSummaryTotals() {
+	            let runningSubtotal = 0;
+	            
+	            // 모든 장바구니 항목의 개별 합계를 업데이트하고 총합을 구합니다.
+	            document.querySelectorAll('tr').forEach(row => {
+	                const itemId = row.querySelector('.quantity-input')?.getAttribute('data-cart-item-id');
+	                if (!itemId) return; // 헤더 또는 빈 행 건너뛰기
+
+	                const quantityInput = row.querySelector(`#quantity-${itemId}`);
+	                const priceSpan = row.querySelector(`#price-${itemId}`); // 단가 (th:id="price-...")
+	                const totalSpan = row.querySelector(`#total-${itemId}`); // 합계 (th:id="total-...")
+
+	                if (quantityInput && priceSpan && totalSpan) {
+	                    const price = parseFloat(priceSpan.getAttribute('th:data-price') || priceSpan.textContent.replace(/[^0-9]/g, '')) || 0;
+	                    const quantity = parseInt(quantityInput.value) || 0;
+	                    const itemTotal = price * quantity;
+	                    
+	                    totalSpan.textContent = formatPrice(itemTotal); // 개별 합계 업데이트
+	                    runningSubtotal += itemTotal;
+	                }
+	            });
+
+	            // 2. 배송비 계산
+	            // (이 로직은 서버의 CartUtils와 일치해야 합니다. 예: 5만원 이상 무료)
+	            const shippingFee = runningSubtotal >= 50000 ? 0 : 3000;
+	            const finalTotal = runningSubtotal + shippingFee;
+
+	            // 3. 요약 영역 업데이트
+				const subtotalSpan = document.getElementById('subtotal');
+				    if (subtotalSpan) {
+				        subtotalSpan.textContent = formatPrice(runningSubtotal);
+				    }
+				    
+				    // ⭐️⭐️⭐️ 배송비 영역 업데이트 ⭐️⭐️⭐️
+				    const shippingFeeSpan = document.getElementById('shippingFeeSpan');
+				    if (shippingFeeSpan) {
+				        shippingFeeSpan.textContent = shippingFee === 0 ? '무료' : formatPrice(shippingFee) + '원';
+				    }
+				    
+				    // ⭐️⭐️⭐️ 총 주문 금액 (Final Total) 업데이트 ⭐️⭐️⭐️
+				    const finalTotalSpan = document.getElementById('finalTotal');
+				    if (finalTotalSpan) {
+				        finalTotalSpan.textContent = formatPrice(finalTotal);
+				    }
+	        }
+	        
+	        // ----------------------------------------------------
+	        // 🌐 2. 서버 통신 (수량 변경 시 AJAX 요청)
+	        // ----------------------------------------------------
+	        window.updateItemQuantity = function(inputElement) {
+	            const itemId = inputElement.getAttribute('data-cart-item-id');
+	            const newQuantity = parseInt(inputElement.value);
+	            const maxQuantity = parseInt(inputElement.max);
+
+	            if (newQuantity < 1) {
+	                alert("수량은 1개 이상이어야 합니다.");
+	                inputElement.value = 1;
+	                return;
+	            }
+	            if (newQuantity > maxQuantity) {
+	                alert(`재고는 최대 ${maxQuantity}개입니다.`);
+	                inputElement.value = maxQuantity;
+	                return;
+	            }
+
+	            fetch('/cart/update', {
+	                method: 'POST',
+	                headers: { 
+	                    'Content-Type': 'application/json',
+	                },
+	                credentials: 'include', // 세션 쿠키 포함
+	                body: JSON.stringify({ cartItemId: itemId, quantity: newQuantity })
+	            })
+	            .then(response => {
+	                if (!response.ok) {
+	                    // 서버 에러 메시지를 파싱하여 사용자에게 보여주기
+	                    return response.json().then(err => { throw new Error(err.message || '수량 변경 실패'); });
+	                }
+	                return response.json(); 
+	            })
+	            .then(data => {
+	                // DB 업데이트 성공 후, 화면의 총 금액 업데이트
+	                updateSummaryTotals(); 
+	                // alert('수량이 변경되었습니다.'); // 무분별한 알림 방지
+	            })
+	            .catch(error => {
+	                console.error('수량 변경 에러:', error);
+	                alert('❌ 수량 변경 중 오류가 발생했습니다. (재고 확인 필요)');
+	                // 실패 시 페이지 새로고침으로 원상복구
+	                window.location.reload(); 
+	            });
+	        };
+			window.deleteCartItem = function(itemId, deleteButton) {
+			    if (!confirm('정말로 이 상품을 장바구니에서 삭제하시겠습니까?')) {
+			        return;
+			    }
+
+			    fetch('/cart/delete/' + itemId, {
+			        method: 'POST',
+			        credentials: 'include'
+			    })
+			    .then(response => {
+			        if (!response.ok) {
+			            // 서버 오류 시 에러 메시지를 파싱하여 던집니다.
+			            return response.json().then(err => { throw new Error(err.message || '삭제 실패'); });
+			        }
+			        
+			        // ⭐️⭐️⭐️ 성공 시, 페이지를 새로고침하여 DB의 최신 상태를 반영 ⭐️⭐️⭐️
+			        alert('✅ 상품 삭제 성공. 목록을 갱신합니다.');
+			        window.location.reload(); 
+			        
+			        return null;
+			    })
+			    .catch(error => {
+			        console.error('삭제 에러:', error);
+			        alert('❌ 삭제 중 오류가 발생했습니다. DB 로그를 확인하세요: ' + error.message);
+			    });
+			};
+	        // --- 초기 로딩 시 합계 계산 ---
+	        updateSummaryTotals();
+	    });
+	</script>
+</body>
+</html>

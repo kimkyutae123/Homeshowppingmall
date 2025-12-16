@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>결제하기 | 유한 옷 마켓</title>
+    <link rel="stylesheet" th:href="@{/style/style.css}"> 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+    
+        /* 헤더 스타일은 cart.html의 style.css에 정의되어 있다고 가정 */
+        
+        .checkout-main {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .checkout-card {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        
+        .card-header-title {
+            font-size: 1.15rem; /* 제목 크기 조정 */
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        /* 주문 상품 목록 */
+        .item-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .item-image {
+            width: 70px; /* 이미지 크기 조정 */
+            height: 70px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+
+        /* ⭐️ 글자 크기 조정 ⭐️ */
+        .item-info h6 {
+            font-size: 0.95rem; /* 상품명 크기 */
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .item-details p {
+            font-size: 0.85rem; /* 가격, 수량 크기 */
+            margin-bottom: 0;
+        }
+
+        /* 개별 합계 */
+        .item-total {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-left: auto;
+        }
+        
+        /* 결제 방법 섹션 */
+        .payment-method {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .payment-method:hover {
+            border-color: #007bff;
+            background-color: #f5faff;
+        }
+        
+        .payment-method.selected {
+            border: 2px solid #007bff;
+            background-color: #eaf2ff;
+        }
+
+        /* 주문 요약 */
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            padding: 5px 0;
+        }
+
+        .summary-total {
+            font-size: 1.1rem; /* 총 결제 금액 크기 조정 */
+            font-weight: bold;
+            color: #28a745;
+            padding-top: 10px;
+        }
+        
+        /* 버튼 컨테이너 */
+        .action-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        /* ⭐️ 버튼 크기 및 스타일 조정 ⭐️ */
+        .btn-checkout {
+            background-color: #28a745; 
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none; /* a 태그일 경우 */
+            display: inline-block;
+        }
+        .btn-continue {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            margin-left: 10px;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+	<div th:if="${successMessage}" class="alert alert-success" role="alert" 
+	         style="text-align: center; margin: 20px auto; max-width: 90%; padding: 15px; border-radius: 8px;">
+	        <span th:text="${successMessage}">결제가 완료되었습니다! 감사합니다. 😊</span>
+	    </div>
+    <header class="header">
+        <div class="nav-bar">
+            <div class="logo">
+               <h1 style="margin: 0;">유한 옷 마켓</h1>
+            </div>
+            
+            <div class="search-and-user">
+                <a th:href="@{/}" class="menu-link">홈</a>
+                <a th:href="@{/shirtlist}" class="menu-link">상의 목록</a>
+                <a th:href="@{/cart}" class="menu-link">장바구니</a>
+                
+                <div class="user-status-group">
+                    <span th:if="${session.user != null}" class="user-welcome">
+                        <span th:text="${session.user.username}"></span>님, 어서오세요
+                    </span>
+                    
+                    <a th:unless="${session.user != null}" th:href="@{/register}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-person-plus"></i> 회원가입
+                    </a>
+                    <a th:unless="${session.user != null}" th:href="@{/login}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-box-arrow-in-right"></i> 로그인
+                    </a>
+                    
+                    <a th:if="${session.user != null}" th:href="@{/logout}" class="menu-link menu-link-button">
+                        <i class="bi bi-box-arrow-right"></i> 로그아웃
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="checkout-main">
+        <h2 class="mb-4 fw-bold">
+            <i class="bi bi-credit-card"></i> 결제하기
+        </h2>
+
+        <form th:action="@{/order/submit}" method="post" id="checkoutForm">
+            <input type="hidden" name="paymentMethod" id="selectedPaymentMethod">
+
+            <div class="checkout-card">
+                <h5 class="card-header-title"><i class="bi bi-bag"></i> 주문 상품</h5>
+                
+                <div th:each="item : ${cartItems}" class="item-row">
+                    <img th:src="@{${item.productOption.product.imageUrl}}" alt="상품 이미지" class="item-image" />
+                    <div class="item-info">
+                        <h6 th:text="${item.productOption.product.name}">상품명</h6>
+                        <p class="text-muted" th:text="'옵션: ' + ${item.productOption.sizeName}">옵션: M</p>
+                        <p class="item-details">
+                            <span th:text="${#numbers.formatInteger(item.productOption.product.price, 0, 'COMMA') + '원'}">79,000원</span>
+                            <span class="text-muted"> × </span>
+                            <span th:text="${item.quantity}">2</span>개
+                        </p>
+                    </div>
+                    <div class="item-total">
+                        <span th:text="${#numbers.formatInteger(item.productOption.product.price * item.quantity, 0, 'COMMA') + '원'}">158,000원</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checkout-card">
+                <h5 class="card-header-title"><i class="bi bi-credit-card"></i> 결제 방법 선택</h5>
+                
+                <div class="payment-method" onclick="selectPayment('card', this)">
+                    <input type="radio" name="paymentMethodRadio" value="card" id="card" class="me-3 d-none">
+                    <label for="card"><i class="bi bi-credit-card me-2"></i>신용카드</label>
+                </div>
+                
+                <div class="payment-method" onclick="selectPayment('bank', this)">
+                    <input type="radio" name="paymentMethodRadio" value="bank" id="bank" class="me-3 d-none">
+                    <label for="bank"><i class="bi bi-bank me-2"></i>계좌이체</label>
+                </div>
+                
+                <div class="payment-method" onclick="selectPayment('kakao', this)">
+                    <input type="radio" name="paymentMethodRadio" value="kakao" id="kakao" class="me-3 d-none">
+                    <label for="kakao"><i class="bi bi-phone me-2"></i>카카오페이</label>
+                </div>
+            </div>
+
+            <div class="checkout-card">
+                <h5 class="card-header-title"><i class="bi bi-receipt"></i> 주문 요약</h5>
+                
+                <div class="summary-row">
+                    <span>상품 금액:</span>
+                    <span th:text="${#numbers.formatInteger(totalAmount - shippingFee, 0, 'COMMA') + '원'}">237,300원</span>
+                </div>
+                <div class="summary-row">
+                    <span>배송비:</span>
+                    <span th:text="${shippingFee == 0} ? '무료' : ${#numbers.formatInteger(shippingFee, 0, 'COMMA') + '원'}">3,000원</span>
+                </div>
+                <hr>
+                <div class="summary-row summary-total">
+                    <span>총 결제 금액:</span>
+                    <span th:text="${#numbers.formatInteger(totalAmount, 0, 'COMMA') + '원'}">240,300원</span>
+                </div>
+            </div>
+
+            <div class="action-container">
+                <button type="button" class="btn-checkout" onclick="processPayment()">
+                    <i class="bi bi-check-circle"></i> 결제 진행하기
+                </button>
+                <a href="/" class="btn-continue">쇼핑 계속하기</a>
+            </div>
+			
+            
+        </form>
+    </main>
+
+    <script>
+    function selectPayment(method, element) {
+        // 모든 결제 방법에서 선택 상태 제거 및 라디오 버튼 상태 초기화
+        document.querySelectorAll('.payment-method').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // 선택된 결제 방법에 선택 상태 추가
+        element.classList.add('selected');
+        
+        // Hidden 필드 업데이트 (서버 전송용)
+        document.getElementById('selectedPaymentMethod').value = method;
+    }
+
+    function processPayment() {
+        const selectedMethod = document.getElementById('selectedPaymentMethod').value;
+        
+        if (!selectedMethod) {
+            alert('결제 방법을 선택해주세요.');
+            return;
+        }
+        
+        // ⭐️ 주문 제출 ⭐️
+        if (confirm(`선택하신 ${selectedMethod} 방식으로 결제를 진행하시겠습니까?`)) {
+            // 서버의 주문 제출 엔드포인트로 폼 전송
+            document.getElementById('checkoutForm').submit();
+        }
+    }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.name} + ' | 유한 옷 마켓'">상품 상세 | 유한 옷 마켓</title>
+    
+    <link rel="stylesheet" th:href="@{/style/style.css}"> 
+
+</head>
+<body>
+
+	
+		<body>
+
+			<header class="header">
+			    <div class="nav-bar">
+			        <div class="logo">
+			           <h1 style="margin: 0;">유한 옷 마켓</h1>
+			        </div>
+			        
+			        <div class="search-and-user">
+			            <a th:href="@{/}" class="menu-link">홈</a>
+			            <a th:href="@{/shirtlist}" class="menu-link">상의 목록</a>
+			            <a th:href="@{/cart}" class="menu-link">장바구니</a>
+			            
+			            
+			            <div class="user-status-group">
+			                <span th:if="${session.user != null}" class="user-welcome">
+			                    <span th:text="${session.user.username}"></span>님, 어서오세요
+			                </span>
+			                
+			                <a th:unless="${session.user != null}" th:href="@{/register}" class="btn btn-outline-primary btn-sm">
+			                    <i class="bi bi-person-plus"></i> 회원가입
+			                </a>
+			                <a th:unless="${session.user != null}" th:href="@{/login}" class="btn btn-primary btn-sm">
+			                    <i class="bi bi-box-arrow-in-right"></i> 로그인
+			                </a>
+			                
+			                <a th:if="${session.user != null}" th:href="@{/logout}" class="menu-link menu-link-button">
+			                    <i class="bi bi-box-arrow-right"></i> 로그아웃
+			                </a>
+			            </div>
+			        </div>
+			    </div>
+			</header>
+	    </header>
+		
+
+	<main class="detail-container">
+        
+        <div class="product-layout">
+            
+            <div class="product-image-area">
+                <div class="main-image" th:style="'background-image: url(' + ${product.imageUrl} + ');'">
+                    </div>
+                <div class="thumbnail-gallery">
+                    </div>
+            </div>
+            
+            <div class="product-info-area">
+                
+                <p class="detail-brand" th:text="${product.category.name} + ' 카테고리'"></p>
+                <h1 class="detail-title" th:text="${product.name}">[상품명] 프리미엄 울 니트</h1>
+                <hr>
+
+                <p class="detail-price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '원'"></p>
+                
+                <form id="orderForm">
+                    
+                    <div class="option-select">
+                        <select id="size-option" required>
+                            <option value="">-- 사이즈를 선택하세요 --</option>
+                            <option th:each="option : ${options}" 
+                                    th:value="${option.id}"
+                                    th:text="${option.sizeName} + ' (재고: ' + ${option.stockQuantity} + ')'">
+                                M (재고: 100)
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="quantity-select">
+                        <input type="number" id="quantity" class="quantity-input" value="1" min="1" max="10" required>
+                    </div>
+
+                    <div class="total-price">
+                        총 상품 금액: <span id="total-amount" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')}">79,000</span>원
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button type="submit" class="buy-button">바로 구매</button>
+                        <button type="button" class="cart-button">장바구니</button>
+                    </div>
+                </form>
+            </div>
+            
+        </div> 			<section class="detail-tabs" style="margin-top: 50px;">
+			            <h2 class="section-title">상품 상세 정보</h2>
+			            <div class="product-description" style="padding: 20px; border: 1px solid #eee;">
+			                
+			              
+			                    <p>여기는 상품의 상세 설명 이미지가 들어갑니다.</p>
+			                
+			                
+			            </div>
+			        </section>
+					<div class="product-info-area">
+					    <hr>
+					    
+					    <p class="detail-views" style="font-size: 0.9em; color: #6c757d;">
+					        <i class="bi bi-eye"></i> 조회수: 
+					        <span th:text="${#numbers.formatInteger(product.viewCount, 0, 'COMMA')}">1,234</span>회
+					    </p>
+					    
+					    <hr>
+					    </div>
+	</main>
+	<footer class="footer">
+	    </footer>
+
+    <script>
+        // 상품 상세 페이지 전용 JS 로직 (옵션 선택에 따른 금액 계산 등)
+		document.addEventListener('DOMContentLoaded', function() {
+		        // --- 요소 정의 ---
+		        const orderForm = document.getElementById('orderForm');
+		        const buyNowButton = orderForm.querySelector('.buy-button'); 
+		        const addToCartButton = orderForm.querySelector('.cart-button'); 
+		        const priceElement = document.querySelector('.detail-price');
+		        
+		        // 가격 (숫자만 추출)
+		        const priceText = priceElement.textContent.replace(/[^0-9]/g, ''); 
+		        const productPrice = parseInt(priceText) || 0;
+		        
+		        const quantityInput = document.getElementById('quantity');
+		        const totalAmountSpan = document.getElementById('total-amount');
+		        const sizeOptionSelect = document.getElementById('size-option');
+		        
+		        // productId는 서버로 전송할 필요가 없으므로 생략해도 무방하나, 
+		        // DTO에 맞춰 optionId와 quantity만 보냅니다.
+		        
+		        // --- 금액 계산 로직 ---
+		        function updateTotalPrice() {
+		            const quantity = parseInt(quantityInput.value) || 1;
+		            const totalPrice = productPrice * quantity;
+		            // 금액을 콤마 형식으로 포맷
+		            totalAmountSpan.textContent = totalPrice.toLocaleString('ko-KR');
+		        }
+		        
+		        quantityInput.addEventListener('input', updateTotalPrice);
+		        sizeOptionSelect.addEventListener('change', updateTotalPrice);
+		        updateTotalPrice(); 
+		        
+		        // --- 장바구니/바로구매 AJAX 로직 ---
+		        function handleOrderAction(isBuyNow) {
+		            const optionId = sizeOptionSelect.value;
+		            const quantity = parseInt(quantityInput.value);
+
+		            if (!optionId) {
+		                alert('⚠️ 사이즈를 선택해주세요.');
+		                return;
+		            }
+		            if (quantity < 1) {
+		                alert('⚠️ 수량은 1개 이상이어야 합니다.');
+		                return;
+		            }
+		            
+		            // 전송할 데이터 (CartController의 CartItemRequest DTO와 일치해야 함)
+		            const cartData = {
+		                optionId: optionId, 
+		                quantity: quantity  
+		            };
+
+		            // AJAX 요청 (POST /cart/add)
+					fetch('/cart/add', {
+					                method: 'POST',
+					                headers: {
+					                    'Content-Type': 'application/json'
+					                },
+					                // ⭐️⭐️⭐️ 세션 쿠키를 반드시 포함하도록 설정 (필수!) ⭐️⭐️⭐️
+					                credentials: 'include', 
+					                // ⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️⭐️
+					                body: JSON.stringify(cartData)
+					            })
+					            .then(response => {
+					                // 1. HTTP 상태 코드 확인 (401이면 무조건 인증 오류로 처리)
+					                if (response.status === 401) {
+					                    alert('🚨 로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+					                    window.location.href = '/login';
+					                    return Promise.reject('UNAUTHORIZED'); // 다음 체인 중단
+					                }
+					                
+					                // 2. 200 OK가 아니면 (재고 부족 등 4xx/5xx) 에러로 처리
+					                if (!response.ok) {
+					                    // 서버에서 보낸 JSON 에러 메시지를 받아서 throw
+					                    return response.json().then(err => { 
+					                        throw new Error(err.message || '장바구니 추가 중 서버 오류 발생'); 
+					                    });
+					                }
+					                
+					                // 3. 성공 (200 OK)
+					                return response.json(); 
+					            })
+					            .then(data => {
+					                // 이 블록은 200 OK일 때만 실행됨
+					                if (isBuyNow) {
+					                    alert('✅ 상품이 장바구니에 추가되었습니다. 바로 주문/장바구니 페이지로 이동합니다.');
+					                    window.location.href = '/cart'; // 바로 장바구니로 이동
+					                } else {
+					                    alert('✅ 상품이 장바구니에 성공적으로 담겼습니다!');
+					                }
+					            })
+					            .catch(error => {
+					                // UNAUTHORIZED 에러는 여기서 다시 알림을 띄우지 않습니다.
+					                if (error !== 'UNAUTHORIZED') {
+					                    console.error('장바구니 처리 오류:', error);
+					                    alert('❌ 처리 중 오류가 발생했습니다: ' + error.message);
+					                }
+					            });
+					        }
+		        // '바로 구매' 버튼 이벤트 리스너 (장바구니 추가 후 이동)
+		        buyNowButton.addEventListener('click', function(event) {
+		            event.preventDefault(); 
+		            handleOrderAction(true); // isBuyNow = true (이동)
+		        });
+
+		        // '장바구니' 버튼 이벤트 리스너 (장바구니 추가만)
+		        addToCartButton.addEventListener('click', function(event) {
+		            event.preventDefault(); 
+		            handleOrderAction(false); // isBuyNow = false (이동 안 함)
+		        });
+		    });
+    </script>
+</body>
+</html>

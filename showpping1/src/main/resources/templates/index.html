@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+	<head>
+	    <meta charset="UTF-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <title>Yuhan Clothes</title>
+		
+	    <link rel="stylesheet" th:href="@{/style/style.css}">
+	   
+	</head>
+<body>
+    <div th:if="${successMessage}" class="alert alert-success" role="alert" 
+         style="text-align: center; margin: 20px auto; max-width: 90%; padding: 15px; border-radius: 8px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+        <span th:text="${successMessage}">결제가 완료되었습니다! 감사합니다. 😊</span>
+    </div>
+    <header class="header">
+	    <div class="nav-bar">
+	        <div class="logo">
+	            <h1 style="margin: 0;">Yuhan Clothes</h1>
+	        </div>
+			
+	        <div class="search-and-user">
+	            
+	            <a href="/" class="menu-link">홈</a>
+	            <a href="/shirtlist" class="menu-link">상의 목록</a>	            
+	            <a href="/cart" class="menu-link">장바구니</a>
+	           
+	            
+	            <div class="user-status-group">
+	                <span th:if="${session.user != null}" class="user-welcome">
+	                    <span th:text="${session.user.username}"></span>님, 어서오세요
+	                </span>
+	                
+	                <a th:unless="${session.user != null}" href="/register" class="btn btn-outline-primary btn-sm">
+	                    <i class="bi bi-person-plus"></i> 회원가입
+	                </a>
+	                <a th:unless="${session.user != null}" href="/login" class="btn btn-primary btn-sm">
+	                    <i class="bi bi-box-arrow-in-right"></i> 로그인
+	                </a>
+	                
+	                <a th:if="${session.user != null}" href="/logout" class="menu-link menu-link-button">
+	                    <i class="bi bi-box-arrow-right"></i> 로그아웃
+	                </a>
+	            </div>
+	        </div>
+	    </div>
+	</header>
+    
+	<main class="main-container">
+		    
+	        <section class="main-visual">
+		        <div class="visual-banner">
+		            
+		            <div class="banner-grid">
+		                
+		                <div class="banner-item" id="main-slider">
+	                        <div class="slide-container">
+	                            <div class="slide active">
+	                                <div class="banner-img" style="background-image: url('/image/banner_a.png');">
+	                                  
+	                                </div>
+	                            </div>
+	                            <div class="slide">
+	                                <div class="banner-img" style="background-image: url('/image/banner_b.png');">
+	                                
+	                                </div>
+	                            </div>
+	                            <div class="slide">
+	                                <div class="banner-img" style="background-image: url('/image/banner_c.png');">
+	                              
+	                                </div>
+	                            </div>
+	                        </div>
+		                </div>
+		              </div>
+			       </div>
+	            
+	        </div>
+	    </section>
+	    
+		<section class="realtime-ranking">
+		    <h2 class="section-title">✨ 실시간 상의 랭킹 베스트 10</h2>
+		    
+		    <div class="product-grid">
+		        <div class="product-item" th:each="product, stat : ${realtimeRanking}" th:if="${stat.index < 10}">
+		            
+		            <a th:href="@{/product/{productId}(productId=${product.id})}">
+		                <div class="product-img" th:style="'background-image: url(' + ${product.imageUrl} + ');'"></div>
+		                <p class="product-rank" th:text="${stat.count} + '위'"></p>
+		                <p class="product-name" th:text="${product.name}">[상품명] 브랜드명</p>
+		                <p class="product-price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '원'">79,000원</p>
+		            </a>
+		        </div> 
+		    </div>
+		    
+		</section>
+	
+		<section class="recommend-products">
+		    <h2 class="section-title">💡 [오늘의 추천] 놓치면 안 될 신상품</h2>
+		    <div class="product-grid">
+		        <div class="product-item" th:each="product : ${recommendProducts}" th:if="${product.id != null}">
+		            
+		            <a th:href="@{/product/{productId}(productId=${product.id})}">
+		                
+		                <div class="product-img" th:style="'background-image: url(' + ${product.imageUrl} + ');'"></div>
+		                
+		                <p class="product-name" th:text="${product.name}">[상품명] 브랜드명</p>
+		                
+		                <p class="product-price" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '원'">129,000원</p>
+		            </a>
+		        </div>
+		    </div>
+		</section>
+
+		
+
+    </main> <footer class="footer">
+        <div class="footer-info">
+            <p>Copyright &copy; [사이트명]. All rights reserved.</p>
+            <p>고객센터 | 이용약관 | 개인정보처리방침</p>
+        </div>
+    </footer>
+	
+	<script>
+	        document.addEventListener('DOMContentLoaded', function() {
+	            // ⭐️ 메인 배너 슬라이드 로직 ⭐️
+	            const sliderContainer = document.getElementById('main-slider');
+	            if (sliderContainer) {
+	                // 'slide-container' 내부의 모든 '.slide' 요소를 찾습니다.
+	                let slides = sliderContainer.querySelectorAll('.slide');
+	                let currentSlide = 0;
+	                const totalSlides = slides.length;
+
+	                function nextSlide() {
+	                    // 현재 active 클래스 제거 (숨기기)
+	                    slides[currentSlide].classList.remove('active');
+
+	                    // 다음 슬라이드 인덱스 계산 (순환)
+	                    currentSlide = (currentSlide + 1) % totalSlides;
+
+	                    // 다음 슬라이드에 active 클래스 추가 (보이기)
+	                    slides[currentSlide].classList.add('active');
+	                }
+
+	                // 5초마다 슬라이드 변경 시작
+	                setInterval(nextSlide, 5000); 
+	            }
+	        });
+	    </script>
+
+</body>
+</html>
